@@ -1,12 +1,9 @@
-# syntax=docker/dockerfile:1
-
-ARG NODE_VERSION=22
 
 # داخل مرحلهٔ build، localhost یعنی خود کانتینر. Verdaccio روی ماشین میزبان یا روی شبکهٔ داکر:
 # پیش‌فرض: host.docker.internal (Desktop) — روی Linux با extra_hosts به host-gateway تبدیل کنید.
 ARG NPM_REGISTRY=https://npm-registry.darkube.ir/
 
-FROM node:${NODE_VERSION}-alpine AS deps
+FROM registry.hamdocker.ir/syaser/node:22-alpine AS deps
 WORKDIR /app
 ARG NPM_REGISTRY
 RUN npm config set registry "${NPM_REGISTRY}"
@@ -14,7 +11,7 @@ RUN npm config set registry "${NPM_REGISTRY}"
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:${NODE_VERSION}-alpine AS builder
+FROM registry.hamdocker.ir/syaser/node:22-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -22,7 +19,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-FROM node:${NODE_VERSION}-alpine AS runner
+FROM registry.hamdocker.ir/syaser/node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
