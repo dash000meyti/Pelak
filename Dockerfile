@@ -1,7 +1,6 @@
 # Build
-FROM node:20-alpine AS builder
+FROM registry.hamdocker.ir/syaser/node:20-alpine AS builder
 WORKDIR /app
-RUN npm set registry https://npm-registry.darkube.ir/
 
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -10,7 +9,7 @@ COPY . .
 RUN npm run build
 
 # Run
-FROM node:20-alpine AS runner
+FROM registry.hamdocker.ir/syaser/node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
