@@ -1,12 +1,15 @@
 {
   "name": "Pelak",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "private": false,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "registry:pull": "sh registry/sync-pull-all.sh",
+    "registry:push": "sh registry/sync-push-smart.sh",
+    "registry": "npm run verdaccio:pull && npm run verdaccio:push"
   },
   "dependencies": {
     "next": "16.2.4",
