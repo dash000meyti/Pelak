@@ -3,8 +3,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Use local registry
-# RUN npm set registry https://npm-registry.darkube.ir/
-RUN npm set registry http://host.docker.internal:4873
+RUN npm set registry https://npm-registry.darkube.ir/
+# RUN npm set registry http://host.docker.internal:4873
 
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -17,8 +17,8 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 # Use local registry
-# RUN npm set registry https://npm-registry.darkube.ir/
-RUN npm set registry http://host.docker.internal:4873
+RUN npm set registry https://npm-registry.darkube.ir/
+# RUN npm set registry http://host.docker.internal:4873
 
 ENV NODE_ENV=production
 ENV PORT=3000

@@ -2,7 +2,7 @@
 
 set -eu
 
-REGISTRY="http://localhost:4873"
+REGISTRY="https://npm-registry.darkube.ir/"
 
 export NPM_CONFIG_PROVENANCE=false
 
@@ -45,27 +45,16 @@ for file in "$TODO_DIR"/*.tgz; do
     continue
   fi
 
-  # extract package.json directly
-  tmp=$(mktemp -d)
+  # read metadata from standard npm tarball location: package/package.json
+  pkgMeta=$(tar -xOf "$file" package/package.json 2>/dev/null || true)
 
-  if ! tar -xzf "$file" -C "$tmp" >/dev/null 2>&1; then
-    echo "🔴 Extract failed"
-    rm -rf "$tmp"
-    continue
-  fi
-
-  pkgJson=$(find "$tmp" -name package.json | head -n 1)
-
-  if [ ! -f "$pkgJson" ]; then
+  if [ -z "$pkgMeta" ]; then
     echo "🔴 package.json missing"
-    rm -rf "$tmp"
     continue
   fi
 
-  name=$(jq -r '.name // empty' "$pkgJson" 2>/dev/null || true)
-  version=$(jq -r '.version // empty' "$pkgJson" 2>/dev/null || true)
-
-  rm -rf "$tmp"
+  name=$(printf "%s" "$pkgMeta" | jq -r '.name // empty' 2>/dev/null || true)
+  version=$(printf "%s" "$pkgMeta" | jq -r '.version // empty' 2>/dev/null || true)
 
   if [ -z "$name" ] || [ -z "$version" ]; then
     echo "🔴 Invalid metadata"
@@ -94,12 +83,20 @@ for file in "$TODO_DIR"/*.tgz; do
 
   set +e
 
+  publish_tag=""
+  case "$version" in
+    *-*)
+      publish_tag="--tag beta"
+      ;;
+  esac
+
 output=$(npm publish "$file" \
   --registry "$REGISTRY" \
   --ignore-scripts \
   --no-audit \
   --no-fund \
-  --provenance=false 2>&1)
+  --provenance=false \
+  $publish_tag 2>&1)
 
   status=$?
 
