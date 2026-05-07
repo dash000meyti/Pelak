@@ -7,9 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "registry:pull": "sh registry/sync-pull-all.sh",
-    "registry:push": "sh registry/sync-push-smart.sh",
-    "registry": "npm run verdaccio:pull && npm run verdaccio:push"
+    "registry:pull": "sh registry/npm-pull.sh",
+    "registry:push": "sh registry/npm-push.sh",
+    "registry": "npm run registry:pull && npm run registry:push"
   },
   "dependencies": {
     "next": "16.2.4",

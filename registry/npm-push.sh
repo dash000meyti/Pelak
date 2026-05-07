@@ -6,21 +6,22 @@ REGISTRY="http://localhost:4873"
 
 export NPM_CONFIG_PROVENANCE=false
 
-CACHE_DIR="./registry/packages"
-DONE_DIR="$CACHE_DIR/done"
+BASE_DIR="./registry/packages"
+TODO_DIR="$BASE_DIR/todo"
+DONE_DIR="$BASE_DIR/done"
 
-mkdir -p "$DONE_DIR"
+mkdir -p "$TODO_DIR" "$DONE_DIR"
 
 echo "🚀 Pushing to Verdaccio..."
 echo "🌐 Registry: $REGISTRY"
-echo "📦 Source: $CACHE_DIR"
+echo "📦 Source: $TODO_DIR"
 echo "📁 Done:   $DONE_DIR"
 echo
 
 # ensure npm registry
 npm config set registry "$REGISTRY" >/dev/null 2>&1 || true
 
-find "$CACHE_DIR" -maxdepth 1 -name "*.tgz" | while read -r file; do
+for file in "$TODO_DIR"/*.tgz; do
 
   [ -f "$file" ] || continue
 
@@ -112,24 +113,30 @@ output=$(npm publish "$file" \
     continue
   fi
 
-  if echo "$output" | grep -qi "previously published"; then
+  case "$output" in
+    *previously\ published*|*cannot\ publish\ over\ previously\ published*)
     echo "🔺 Already exists (race)"
 
     mv "$file" "$DONE_DIR/$base"
 
-  elif echo "$output" | grep -qi "ENEEDAUTH"; then
+    ;;
+    *ENEEDAUTH*)
     echo "🔒 Auth error"
 
-  elif echo "$output" | grep -qi "E403"; then
+    ;;
+    *E403*)
     echo "🔒 Permission denied"
 
-  elif echo "$output" | grep -qi "E404"; then
+    ;;
+    *E404*)
     echo "❌ Registry unreachable"
 
-  else
+    ;;
+    *)
     echo "❌ Publish failed"
     echo "$output"
-  fi
+    ;;
+  esac
 
   echo
 

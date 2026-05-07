@@ -2,13 +2,16 @@
 
 set -euo pipefail
 
-CACHE_DIR="./registry/packages"
+BASE_DIR="./registry/packages"
+TODO_DIR="$BASE_DIR/todo"
+DONE_DIR="$BASE_DIR/done"
 TMP_LOCK="./registry/.tmp-lock.json"
 
-mkdir -p "$CACHE_DIR"
+mkdir -p "$TODO_DIR" "$DONE_DIR"
 
 echo "🌍 Pulling ALL platforms (clean + dedup)..."
-echo "📦 Cache: $CACHE_DIR"
+echo "📦 Todo:  $TODO_DIR"
+echo "📁 Done:  $DONE_DIR"
 echo ""
 
 PLATFORMS="linux darwin win32"
@@ -58,18 +61,20 @@ jq -r '
 | sort -u \
 | while read -r url; do
 
-  file="$CACHE_DIR/$(basename "$url")"
+  base="$(basename "$url")"
+  todo_file="$TODO_DIR/$base"
+  done_file="$DONE_DIR/$base"
 
-  if [ -f "$file" ]; then
-    echo "🔻 Cached: $(basename "$file")"
+  if [ -f "$todo_file" ] || [ -f "$done_file" ]; then
+    echo "🔻 Already tracked: $base"
     continue
   fi
 
-  echo "🔽 Downloading: $(basename "$file")"
+  echo "🔽 Downloading: $base"
 
-  if ! curl -fL "$url" -o "$file"; then
+  if ! curl -fL "$url" -o "$todo_file"; then
     echo "❌ Failed: $url"
-    rm -f "$file"
+    rm -f "$todo_file"
   fi
 
 done
