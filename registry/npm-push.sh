@@ -45,8 +45,15 @@ for file in "$TODO_DIR"/*.tgz; do
     continue
   fi
 
-  # read metadata from standard npm tarball location: package/package.json
-  pkgMeta=$(tar -xOf "$file" package/package.json 2>/dev/null || true)
+  # read metadata from tarball package.json (supports package/ or <name>/ layouts)
+  pkgPath=$(tar -tzf "$file" 2>/dev/null | awk '/\/package\.json$/ { print; exit }')
+
+  if [ -z "$pkgPath" ]; then
+    echo "🔴 package.json missing"
+    continue
+  fi
+
+  pkgMeta=$(tar -xOf "$file" "$pkgPath" 2>/dev/null || true)
 
   if [ -z "$pkgMeta" ]; then
     echo "🔴 package.json missing"
